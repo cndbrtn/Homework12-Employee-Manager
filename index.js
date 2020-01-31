@@ -16,6 +16,26 @@ connection.connect(function (err) {
         return;
     }
     console.log(`connected as id ${connection.threadId}`);
+    const welcomeTxt = `
+---------------------------------------------------------------
+####### #     # ######  #       ####### #     # ####### #######    
+#       ##   ## #     # #       #     #  #   #  #       #          
+#       # # # # #     # #       #     #   # #   #       #          
+#####   #  #  # ######  #       #     #    #    #####   #####      
+#       #     # #       #       #     #    #    #       #          
+#       #     # #       #       #     #    #    #       #          
+####### #     # #       ####### #######    #    ####### #######    
+                                                                   
+    ####### ######     #     #####  #    # ####### ######  
+       #    #     #   # #   #     # #   #  #       #     # 
+       #    #     #  #   #  #       #  #   #       #     # 
+       #    ######  #     # #       ###    #####   ######  
+       #    #   #   ####### #       #  #   #       #   #   
+       #    #    #  #     # #     # #   #  #       #    #  
+       #    #     # #     #  #####  #    # ####### #     # 
+---------------------------------------------------------------
+    `
+    console.log("\x1b[34m", welcomeTxt)
     start();
 
 });
@@ -104,48 +124,46 @@ const allEmpByMan = () => {
         consoleResult(err, res);
     });
 }
+const validator = function (input) {
+    // return input !== '' || "Name must be letters only";
+    const letters = /^[A-Za-z]+$/;
+    if (input.match(letters)) {
+        console.log(`  SUCCESS  !!!  Added new name: ${input}`)
+        return true;
+    } else {
+        console.log("  ERROR  !!!  Your input can only contain upper and lower case letters, please try again")
+        return false;
+    }
+}
+    
 
 const addEmp = () => {
-    const letters = /^[A-Za-z]+$/;
-// for adding new employees
-    inquirer.prompt(
+    // for adding new employees
+    inquirer.prompt([
         {
-            name: "firstName",
+            name: "first",
             type: "input",
             message: "Enter employee's first name:",
-            validate: (name) => {
-                
-                if (name.firstName.match(letters)) {
-                    console.log(`Successfully added new first name: ${newName.firstName}`)
-                    return true;
-                }
-                else {
-                    console.log("Your input can only contain upper and lower case letters")
-                    return false;
-                }
-            }
+            validate: validator
         },
         {
-            name: "lastName",
+            name: "last",
             type: "input",
             message: "Enter employee's last name:",
-            validate: (name) => {
-
-                if (name.lastName.match(letters)) {
-                    console.log(`Successfully added new first name: ${name.lastName}`)
-                    return true;
-                }
-                else {
-                    console.log("Your input can only contain upper and lower case letters")
-                    return false;
-                }
-            }
+            validate: validator
         }
-    )
+    ]).then((name) => {
+            console.log(`new employee ${name.first} ${name.last}`)
+        })
+    //     .then((first, last) => {
+    //     connection.query(`INSERT INTO employee SET first_name=? last_name=?`, [first, last], (err, res) => {
+    //         if (err) throw err;
+    //         console.
+    //     })
+    // })
 }
 
 const update = () => {
-    console.log(`You are currently in Update mode`)
     // this is where we update employees/roles/departments
 }
 
@@ -154,3 +172,17 @@ const consoleResult = (err, res) => {
     console.table(res);
     start();
 }
+
+// const validater = () => {
+//     validate: (input) => {
+//         const letters = /^[A-Za-z]+$/;
+
+        
+//         if (input.value.match(letters)) {
+//             console.log(`Successfully added new first name: ${input}`)
+//             return true;
+//         }
+//         console.log("Your input can only contain upper and lower case letters")
+//         return false;
+//     }
+// }
