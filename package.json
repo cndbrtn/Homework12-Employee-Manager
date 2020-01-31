@@ -1,0 +1,32 @@
+{
+  "name": "employee-tracker",
+  "version": "1.0.0",
+  "description": "an app allow for viewing, adding, and editing employees and departments",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "dependencies": {
+    "console.table": "^0.10.0",
+    "inquirer": "^6.5.2",
+    "mysql": "^2.18.1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/cndbrtn/Homework12-Employee-Manager.git"
+  },
+  "keywords": [
+    "msql",
+    "console.table",
+    "inquirer",
+    "node",
+    "butts"
+  ],
+  "author": "CNDBRTN",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/cndbrtn/Homework12-Employee-Manager/issues"
+  },
+  "homepage": "https://github.com/cndbrtn/Homework12-Employee-Manager#readme"
+}
