@@ -40,6 +40,7 @@ connection.connect(function (err) {
 
 });
 
+
 const start = () => {
 
     inquirer.prompt({
@@ -60,7 +61,7 @@ const start = () => {
         if (choice.menu === "View All Employees By Role") allEmpByRole();
         if (choice.menu === "View All Employees by Manager") allEmpByMan();
         if (choice.menu === "Add Employee") addEmp();
-        if (choice.menu === "Remove Employee") allEmpByRole();
+        if (choice.menu === "Remove Employee") deleteEmp();
         if (choice.menu === "Update Employee Role") allEmpByRole();
         if (choice.menu === "Update Employee Manager") allEmpByRole();
         if (choice.menu === "View All Roles") allEmpByRole();
@@ -124,6 +125,7 @@ const allEmpByMan = () => {
         consoleResult(err, res);
     });
 }
+
 const validator = function (input) {
     // return input !== '' || "Name must be letters only";
     const letters = /^[A-Za-z]+$/;
@@ -138,6 +140,40 @@ const validator = function (input) {
     
 
 const addEmp = () => {
+    
+    const managerArr = [];
+    const roleArr = ["1. Casheir", "2. Stockist", "3. Inventory", "4. Shift Supervisor", "5. Assistant Manager", "6. Store Manager", "7.Regional Manager"];
+    const sqlQuery = `
+    SELECT DISTINCT m.id, m.first_name, m.last_name, r.title
+    FROM employee e
+    JOIN employee m
+    ON e.manager_id = m.id
+    JOIN role r
+    ON m.role_id = r.id`;
+    // const toPush = {
+    //     id: "result.id",
+    //     first_name: "result.first_name",
+    //     last_name: "result.last_name"
+    // };
+        
+        // arr.push(result.id + ". " + result.first_name + " " + result.last_name + " || " + result.title);
+
+    listQuery(sqlQuery, managerArr);
+    // connection.query(`
+    //         SELECT DISTINCT m.id, m.first_name, m.last_name, r.title
+    //         FROM employee e
+    //         JOIN employee m
+    //         ON e.manager_id = m.id
+    //         JOIN role r
+    //         ON m.role_id=r.id`, (err, res) => {
+    //     if (err) throw err;
+    //     for (result of res) {
+    //         managerArr.push(result.id + ". " + result.first_name + " " + result.last_name + " ---" + result.title);
+    //     }
+    //     // console.log("manager array ", managerArr);   
+    //     return managerArr;
+    // });
+    
     // for adding new employees
     inquirer.prompt([
         {
@@ -151,26 +187,100 @@ const addEmp = () => {
             type: "input",
             message: "Enter employee's last name:",
             validate: validator
+        },
+        {
+            name: "role",
+            type: "list",
+            message: "What is their role in the company?",
+            choices: roleArr
+        },
+        {
+            name: "manager",
+            type: "list",
+            message: "Who manages new employee?",
+            choices: managerArr
+
+        }]).then((answer) => {
+            // console.log(answer.manager)
+            let role = answer.role;
+            let manager = answer.manager;
+            if (manager != null) {
+                role = parseInt(role.charAt(0));
+                manager = parseInt(manager.charAt(0));
+            } else {
+                manager = null;
+            }
+
+            const newEmployee = {
+                first_name: answer.first,
+                last_name: answer.last,
+                role_id: role,
+                manager_id: manager
+            }
+        
+            // console.table(newEmployee)
+            // if (role === "")
+            connection.query(`INSERT INTO employee SET ? `, newEmployee, (err, res) => {
+                if (err) throw err;
+                // console.log(res)
+                    allEmployees();
+            })
+        });
+}
+
+const deleteEmp = () => {
+    
+    const employeeArr = [];
+
+    connection.query(`SELECT id, first_name, last_name FROM employee;`, (err, res) => {
+        if (err) throw err;
+        for (result of res) {
+            // console.log(result)
+            employeeArr.push(result.id + ". " + result.first_name + " " + result.last_name)
         }
-    ]).then((name) => {
-            console.log(`new employee ${name.first} ${name.last}`)
+        // console.log(employeeArr)
+        return employeeArr;
+    });
+    // console.log(employeeArr);   
+    inquirer.prompt([
+        {
+            name: "employee",
+            type: "list",
+            message: "Which employee would you like to delete?",
+            choices: employeeArr
+        }
+    ]).then((answer) => {
+        let id = answer.employee;
+        id = parseInt(id.charAt(0));
+        console.log(id);
+
+        connection.query(`DELETE FROM employee WHERE id=?`, [id], (err, res) => {
+            if (err) throw err;
+            console.log(res);
+            allEmployees();
+            })
         })
-    //     .then((first, last) => {
-    //     connection.query(`INSERT INTO employee SET first_name=? last_name=?`, [first, last], (err, res) => {
-    //         if (err) throw err;
-    //         console.
-    //     })
-    // })
-}
+    // this is where we delete employees/roles/departments
+    }
 
-const update = () => {
-    // this is where we update employees/roles/departments
+    const consoleResult = (err, res) => {
+        if (err) throw err;
+        console.table(res);
+        start();
 }
+   
 
-const consoleResult = (err, res) => {
-    if (err) throw err;
-    console.table(res);
-    start();
+
+const listQuery = (query, arr) => {
+    connection.query(query, (err, res) => {
+        if (err) throw err;
+        for (result of res) {
+            // console.log(result);
+            arr.push(result.id + ". " + result.last_name + " " + result.last_name);
+        }
+        // console.log("final array ", arr);   
+        return arr;
+    });
 }
 
 // const validater = () => {
@@ -185,4 +295,8 @@ const consoleResult = (err, res) => {
 //         console.log("Your input can only contain upper and lower case letters")
 //         return false;
 //     }
+// }
+
+// const employeeList = function () {
+    
 // }
