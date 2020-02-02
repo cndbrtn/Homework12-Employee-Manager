@@ -50,8 +50,8 @@ const start = () => {
         choices:
             [
             "View All Employees", "View All Employees By Department", "View All Employees By Role",
-            "View All Employees by Manager", "Add Employee", "Remove Employee", "Update Employee Role",
-            "Update Employee Manager", "View All Roles", "Add Role", "Remove Role",
+            "View All Employees by Manager", "Add Employee", "Remove Employee", "Update Employee",
+            "View All Roles", "Add Role", "Remove Role",
             "View All Departments", "Add Department", "Remove Department"
             ]
     }).then((choice) => {
@@ -62,8 +62,7 @@ const start = () => {
         if (choice.menu === "View All Employees by Manager") allEmpByMan();
         if (choice.menu === "Add Employee") addEmp();
         if (choice.menu === "Remove Employee") deleteEmp();
-        if (choice.menu === "Update Employee Role") allEmpByRole();
-        if (choice.menu === "Update Employee Manager") allEmpByRole();
+        if (choice.menu === "Update Employee") updateEmp();
         if (choice.menu === "View All Roles") allEmpByRole();
         if (choice.menu === "Add Role") allEmpByRole();
         if (choice.menu === "Remove Role") allEmpByRole();
@@ -93,6 +92,13 @@ const allEmployees = () => {
 
 const allEmpByDept = () => {
     // this is where we get all employee names and their assigned department
+
+    /*the instructions for this project were very very vague as far as what was expected for "view department" and "view manager"
+      am I being asked to just show all the employees and their departments? all employees and their managers? or am I meant to sort
+      everything so that I'm displaying ONLY employees in a certain department or managed by a certain person? if I had a client I could
+      ask them what they wanted but my client is just a readme file. I couldn't figure out how to query the database to get ONLY employees
+      by certain manager or department. I'm sure there's a way but I couldn't figure it out and because the assignment is so vague as to 
+      what it actually expects out of me this is what I cam up with for the "display all by manager", and "display all by department"  */
     connection.query(`
     SELECT e.id, e.first_name AS 'first name', e.last_name AS 'last name', d.name AS 'department'
     FROM employee e
@@ -103,6 +109,52 @@ const allEmpByDept = () => {
         consoleResult(err, res);
     });
 }
+
+
+
+    // 'SELECT * FROM department; `, (err, res) => {
+    //         if (err) throw err;
+    //         const depts = res;
+    //         console.log(depts)
+
+    //         const departments = depts.map(obj => {
+    //             let newObj = {};
+    //             newObj = { 
+    //                 name: obj.name,
+    //                 value: {
+    //                     id: obj.id,
+    //                     name: obj.name
+    //                 }
+    //             }
+    //             return newObj;
+    //         })
+    //         // consoleResult(err, res);
+    //         inquirer.prompt({
+    //             name: "department",
+    //             type: "list",
+    //             message: "Which department would you like to view?",
+    //             choices: departments
+    //         }).then(answer => {
+    //             console.log(answer.department)
+                
+    //                 connection.query(`
+    // SELECT e.first_name, e.last_name, d.name
+    // FROM employee e
+    // JOIN role r
+    // JOIN department d
+    // ON r.department_id = d.id`, (err, res) => {
+    //                         if (err) throw err;
+    //                         console.log(res)
+    //                         const resArr = res;
+    //                         if (answer.department.id === 1) {
+
+                        
+
+                            // }
+    //                 })
+        // })
+//     });
+// }
 
 const allEmpByRole = () => {
     // this is where we get all employee names and their role
@@ -144,6 +196,8 @@ const addEmp = () => {
     const sqlQuery2 = `SELECT id, title FROM role`;
 
     // const toPush = result.id + ". " + result.first_name + " " + result.last_name;
+
+    console.log(listQuery(sqlQuery1))
 
     roleListQuery(sqlQuery2, roleArr)
     // for adding new employees
@@ -202,34 +256,115 @@ const addEmp = () => {
 }
 
 const deleteEmp = () => {
-    
-    const empArr = [];
-    const sqlQuery = `SELECT id, first_name, last_name FROM employee;`;
-    // this function works just fine in addEmp() but for some reason will not return the array here
-    const result = listQuery(sqlQuery);
-    console.log(result)
-    // console.log(empArr)
+  // this is where we delete employees/roles/departments
+    connection.query("SELECT * FROM employee", function (err, res) {
+        if (err) throw err;
+        const empArr = res.map(obj => {
+            let newObj = {
+                name: obj.id + ". " + obj.first_name + " " + obj.last_name,
+                value: {
+                    id: obj.id,
+                    first_name: obj.first_name,
+                    last_name: obj.last_name
+            }};
+            // newObj[obj.id] = obj.first_name + " " + obj.last_name; 
+            return newObj;
+        })
+        // console.log(empArr)
 
-    inquirer.prompt(
-        {
+        inquirer.prompt({
             name: "employee",
             type: "list",
             message: "Which employee would you like to delete?",
-            choices: listQuery(sqlQuery)
-        },
-    ).then((answer) => {
-        let id = answer.employee;
-        id = parseInt(id.charAt(0));
-        console.log(id);
-
-        connection.query(`DELETE FROM employee WHERE id=?`, [id], (err, res) => {
-            if (err) throw err;
-            console.log(res);
-            allEmployees();
+            choices: empArr
+        }).then((answer) => {
+            const id = answer.employee.id;
+            console.log(id);
+            connection.query(`DELETE FROM employee WHERE id=?`, [id], (err, res) => {
+                if (err) throw err;
+                // console.log(res);
+                allEmployees();
             })
+        });
+    })
+}
+
+const updateEmp = () => {
+    connection.query(`SELECT * FROM employee`, (err, res) => {
+        if (err) throw err;
+
+        const resArr = res;
+        const updateEmpArr = resArr.map(obj => {
+            let newObj = {
+                name: obj.id + ". " + obj.first_name + " " + obj.last_name,
+                value: {
+                    id: obj.id,
+                    first_name: obj.first_name,
+                    last_name: obj.last_name,
+                    role_id: obj.role_id,
+                    manager_id: obj.manager_id
+                }
+            }
+            return newObj;
         })
-    // this is where we delete employees/roles/departments
-    }
+
+        inquirer.prompt([
+            {
+                name: "employee",
+                type: "list", 
+                message: "Which employee would you like to update?",
+                choices: updateEmpArr
+            },
+            {
+                name: "update",
+                type: "list",
+                message: "What would you like to update?",
+                choices: ["Name", "Role", "Department", "Manager"]
+            }
+        ]).then(answer => {
+            if (answer.update === "Name") {
+                const empId = answer.employee.id
+                inquirer.prompt([
+                    {
+                        name: "firstName",
+                        type: "input",
+                        message: "Update employee first name"
+                    },
+                    {
+                        name: "lastName",
+                        type: "input",
+                        message: "Update employee last name"
+                    }
+                ]).then(answer2 => {
+                    console.log(empId);
+                    console.log(answer2.firstName + " " + answer2.lastName)
+
+                    const newEmpName = {
+                        first_name: answer2.firstName,
+                        last_name: answer2.lastName
+                    }
+                    connection.query(`
+                    UPDATE employee
+                    SET ?
+                    WHERE id =?`, [newEmpName, empId], (err, res) => {
+                            if (err) throw err;
+                            console.log(Employee Name Successfully Updated!)
+                            allEmployees();
+                    })
+                })
+            }
+            // if (answer.update === "Role") {
+                
+            // }
+            // if (answer.update === "Department") {
+                
+            // }
+            // else {
+                
+            // }
+        })
+    })
+}
 
     const consoleResult = (err, res) => {
         if (err) throw err;
@@ -237,33 +372,35 @@ const deleteEmp = () => {
         start();
 }
    
-// trying to condense
-const listQuery = (query) => {
-    const array = [];
-    connection.query(query, (err, res) => {
-        if (err) throw err;
-        // console.log(res)
-        for (result of res) {
-            // console.log(result);
-            array.push(result.id + ". " + result.first_name + " " + result.last_name);
-        }
-    });
+// // trying to condense
+// const  listQuery = (query, arr) => {
     
-    console.log("final array ", array);   
-    return array;
-}
+//     connection.query(query, (err, res) => {
+//         // const array = [];
+//         if (err) throw err;
+//         // console.log(res)
+//         for (var i = 0; i < res.length; i++) {
+//             // console.log(result);
+//             arr.push(res[i].first_name + res[i].last_name);
+//         }
 
-const roleListQuery = (query, arr) => {
-    connection.query(query, (err, res) => {
-        if (err) throw err;
-        for (result of res) {
-            // console.log(result);
-            arr.push(result.id + ". " + result.title);
-        }
-        // console.log("final array ", arr);   
-        return arr;
-    });
-}
+//         // console.log("final array ", array);
+//         return arr;
+//     });
+    
+// }
+
+// const roleListQuery = (query, arr) => {
+//     connection.query(query, (err, res) => {
+//         if (err) throw err;
+//         for (result of res) {
+//             // console.log(result);
+//             arr.push(result.id + ". " + result.title);
+//         }
+//         // console.log("final array ", arr);   
+//         return arr;
+//     });
+// }
 
 // const empListQuery = (query, arr) => {
 //     connection.query(query, (err, res) => {
