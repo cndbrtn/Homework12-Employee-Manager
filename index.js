@@ -52,7 +52,7 @@ const start = () => {
             "View All Employees", "View Employees By Department", "View Employees By Role",
             "View Employees by Manager", "Add Employee", "Remove Employee", "Update Employee",
             "View All Roles", "Add Role", "Remove Role",
-            "View All Departments", "Add Department", "Remove Department"
+            "View All Departments", "Add Department", "Remove Department", "View Budget Allocated to Payroll"
             ]
     }).then((choice) => {
         // console.table(choice);
@@ -69,6 +69,7 @@ const start = () => {
         if (choice.menu === "View All Departments") allDep();
         if (choice.menu === "Add Department") addDep();
         if (choice.menu === "Remove Department") deleteDep();
+        if (choice.menu === "View Budget Allocated to Payroll") usedBudget();
        
     })
 }
@@ -524,7 +525,7 @@ const updateEmp = () => {
 
 const allRoles = () => {
     connection.query(`
-    SELECT * FROM role
+    SELECT id, title, salary FROM role
     `, (err, res) => {
             if (err) throw err;
             consoleResult(err, res)
@@ -533,7 +534,7 @@ const allRoles = () => {
 
 const allDep = () => {
     connection.query(`
-    SELECT * FROM department
+    SELECT id, name FROM department
     `, (err, res) => {
         if (err) throw err;
         consoleResult(err, res)
@@ -643,6 +644,18 @@ const deleteDep = () => {
             
     })
 
+}
+
+const usedBudget = () => {
+    connection.query(`
+    SELECT SUM(r.salary) AS 'total pay'
+    FROM role r
+    JOIN employee e
+    ON e.role_id=r.id;
+    `, (err, res) => {
+            consoleResult(err, res);
+            // console.log
+    })
 }
 
 const consoleResult = (err, res) => {
