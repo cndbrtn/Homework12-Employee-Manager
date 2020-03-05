@@ -74,9 +74,10 @@ const start = () => {
     })
 }
 // these don't work all the time and it's probably an async issue but I couldn't figure out how to get async/await to work here
-let roleArr = (res) => {
+const roleArr = (res) => {
 
-    roleArr = res.map(obj => {
+    const roles = [];
+    res.map(obj => {
         let newObj = {
             name: obj.id + ". " + obj.title,
             value: {
@@ -86,13 +87,15 @@ let roleArr = (res) => {
                 department_id: obj.department_id
             }
         }
-        return newObj;
+        roles.push(newObj)
     })
+    return roles;
 }
 
-let managerArr = (res) => {
+const managerArr = (res) => {
 
-    managerArr = res.map(obj => {
+    const managers = [];
+        res.map(obj => {
         let newObj = {
             name: obj.id + ". " + obj.first_name + " " + obj.last_name,
             value: {
@@ -100,13 +103,15 @@ let managerArr = (res) => {
                 first_name: obj.title,
                 last_name: obj.salary
             }
-        }
-        return newObj;
+            }
+            managers.push(newObj)
     })
+    return managers;
 }
 
-let empArr = (res) => {
-    empArr = res.map(obj => {
+const empArr = (res) => {
+    const employees = [];
+        res.map(obj => {
         let newObj = {
             name: obj.id + ". " + obj.first_name + " " + obj.last_name,
             value: {
@@ -117,23 +122,25 @@ let empArr = (res) => {
                 managers_id: obj.manager_id
             }
         };
-        // newObj[obj.id] = obj.first_name + " " + obj.last_name; 
-        return newObj;
+        employees.push(newObj)
     })
+    return employees;
     
 }
 
 let depArr = (res) => {
-    depArr = res.map(obj => {
+    const departments = [];
+        res.map(obj => {
         let newObj = {
             name: obj.name,
             value: {
                 id: obj.id,
                 name: obj.name
             }
-        }
-        return newObj;
+            }
+            departments.push(newObj)
     })
+    return departments;
 }
 
 const allEmployees = () => {
@@ -160,13 +167,13 @@ const allEmpByDept = () => {
         //  const depts = res;
         //  console.log(depts)
             
-        depArr(res);
+        const departmentArr = depArr(res);
          // consoleResult(err, res);
          inquirer.prompt({
              name: "department",
              type: "list",
              message: "Which department would you like to view?",
-             choices: depArr
+             choices: departmentArr
          }).then(answer => {
             //  console.log(answer.department.name)
             connection.query(`
@@ -179,7 +186,10 @@ const allEmpByDept = () => {
             `, [answer.department.name], (err, res) => {
                  consoleResult(err, res)
             })
-        })
+         }).catch((error) => {
+             console.log(error.message);
+             res.json({ error: error.message });
+         })
     });
 }
 
@@ -191,24 +201,13 @@ const allEmpByRole = () => {
     connection.query(`SELECT * FROM role;`, (err, res) => {
         if (err) throw err;
         // roleArr(res);
-        const roles = res.map(obj => {
-            let newObj = {
-                name: obj.title,
-                value: {
-                    id: obj.id,
-                    title: obj.title,
-                    salary: obj.salary,
-                    department_id: obj.department_id
-                }
-            }
-            return newObj;
-        })
+        const rolesArr = roleArr(res);
         consoleResult(err, res);
         inquirer.prompt({
             name: "role",
             type: "list",
             message: "Which role would you like to view?",
-            choices: roles
+            choices: rolesArr
         }).then(answer => {
             console.log(answer.role.title)
             connection.query(`
@@ -220,6 +219,9 @@ const allEmpByRole = () => {
             `, [answer.role.title], (err, res) => {
                 consoleResult(err, res)
             })
+        }).catch((error) => {
+            console.log(error.message);
+            res.json({ error: error.message });
         })
     });
 }
@@ -233,24 +235,12 @@ const allEmpByMan = () => {
     ON e.manager_id = m.id;
     `, (err, res) => {
         if (err) throw err;
-        managerArr(res)
-        // const managers = res.map(obj => {
-        //     let newObj = {
-        //         name: obj.id + ". " + obj.first_name + " " + obj.last_name,
-        //         value: {
-        //             id: obj.id,
-        //             first_name: obj.title,
-        //             last_name: obj.salary
-        //         }
-        //     }
-        //     return newObj;
-        // })
-        // consoleResult(err, res);
+        const managersArr = managerArr(res)
         inquirer.prompt({
             name: "manager",
             type: "list",
             message: "Which manager's employees would you like to view?",
-            choices: managerArr
+            choices: managersArr
         }).then(answer => {
             // console.log(answer.manager.id)
             connection.query(`
@@ -263,6 +253,9 @@ const allEmpByMan = () => {
                     // console.log(res);
                 consoleResult(err, res)
             })
+        }).catch((error) => {
+            console.log(error.message);
+            res.json({ error: error.message });
         })
     });
 }
@@ -279,118 +272,82 @@ const addEmp = () => {
     JOIN role r
     ON m.role_id = r.id
     `, (err, res) => {
-            if (err) throw err;
-            // const managerArr = res.map(obj => {
-            //     let newObj = {
-            //         name: obj.id + ". " + obj.first_name + " " + obj.last_name,
-            //         value: {
-            //             id: obj.id,
-            //             first_name: obj.first_name,
-            //             last_name: obj.last_name
-            //         }
-            //     }
-            //     return newObj;
-            // })
-            managerArr(res)
-
-            managerArr.push({ name: "0. None" })
+        if (err) throw err;
+        const managersArr = managerArr(res);
+        managersArr.push({ name: "0. None" });
             
-            connection.query(`SELECT * FROM role`, (err, res) => {
-                if (err) throw err;
-                roleArr(res)
-                // const roleArr = res.map(obj => {
-                //     let newObj = {
-                //         name: obj.id + ". " + obj.title,
-                //         value: {
-                //             id: obj.id,
-                //             title: obj.title,
-                //             salary: obj.salary,
-                //             department_id: obj.department_id
-                //         }
-                //     }
-                //     return newObj;
-                // })
-                inquirer.prompt([
-                    {
-                        name: "first",
-                        type: "input",
-                        message: "Enter employee's first name:",
-                        validate: validator
-                    },
-                    {
-                        name: "last",
-                        type: "input",
-                        message: "Enter employee's last name:",
-                        validate: validator
-                    },
-                    {
-                        name: "role",
-                        type: "list",
-                        message: "What is their role in the company?",
-                        choices: roleArr
-                    },
-                    {
-                        name: "manager",
-                        type: "list",
-                        message: "Who manages new employee?",
-                        choices: managerArr
-                    },
-                ]).then((answer) => {
-                            // console.log(answer.manager)
-                            const newEmployee = {
-                                first_name: answer.first,
-                                last_name: answer.last,
-                                role_id: answer.role.id,
-                                manager_id: answer.manager.id
-                            }
+        connection.query(`SELECT * FROM role`, (err, res) => {
+            if (err) throw err;
+            const rolesArr = roleArr(res);
+            inquirer.prompt([
+                {
+                    name: "first",
+                    type: "input",
+                    message: "Enter employee's first name:",
+                    validate: validator
+                },
+                {
+                    name: "last",
+                    type: "input",
+                    message: "Enter employee's last name:",
+                    validate: validator
+                },
+                {
+                    name: "role",
+                    type: "list",
+                    message: "What is their role in the company?",
+                    choices: rolesArr
+                },
+                {
+                    name: "manager",
+                    type: "list",
+                    message: "Who manages new employee?",
+                    choices: managersArr
+                },
+            ]).then((answer) => {
+                 // console.log(answer.manager)
+                const newEmployee = {
+                first_name: answer.first,
+                last_name: answer.last,
+                role_id: answer.role.id,
+                manager_id: answer.manager.id
+                }
     
-                            // console.table(newEmployee)
+                // console.table(newEmployee)
                             // if (role === "")
-                            connection.query(`INSERT INTO employee SET ? `, newEmployee, (err, res) => {
-                                if (err) throw err;
-                                // console.log(res)
-                                allEmployees();
-                            })
-                        });
+                connection.query(`INSERT INTO employee SET ? `, newEmployee, (err, res) => {
+                if (err) throw err;
+                // console.log(res)
+                allEmployees();
             })
-
-    })
-    // console.log(listQuery(sqlQuery1))
-    
-    // for adding new employees
-    
+            }).catch((error) => {
+                console.log(error.message);
+                res.json({ error: error.message });
+            })
+        })
+    })  
 }
 
 const deleteEmp = () => {
   // this is where we delete employees/roles/departments
     connection.query("SELECT * FROM employee", (err, res) => {
         if (err) throw err;
-        empArr(res);
-        // const empArr = res.map(obj => {
-        //     let newObj = {
-        //         name: obj.id + ". " + obj.first_name + " " + obj.last_name,
-        //         value: {
-        //             id: obj.id,
-        //             first_name: obj.first_name,
-        //             last_name: obj.last_name
-        //     }};
-        //     // newObj[obj.id] = obj.first_name + " " + obj.last_name; 
-        //     return newObj;
-        // })
-        // console.log(empArr)
-
+        const employeeArr = empArr(res);
+        
         inquirer.prompt({
             name: "employee",
             type: "list",
             message: "Which employee would you like to delete?",
-            choices: empArr
+            choices: employeeArr
         }).then((answer) => {
-            console.log(id);
+            // console.log(answer.employee.id);
             connection.query(`DELETE FROM employee WHERE id=?`, [answer.employee.id], (err, res) => {
                 if (err) throw err;
-                // console.log(res);
                 allEmployees();
             })
+        }).catch((error) => {
+            console.log(error.message);
+            // res.json({ error: error.message });
         });
     })
 }
@@ -398,27 +355,14 @@ const deleteEmp = () => {
 const updateEmp = () => {
     connection.query(`SELECT * FROM employee`, (err, res) => {
         if (err) throw err;
-        empArr(res);
-        // const updateEmpArr = res.map(obj => {
-        //     let newObj = {
-        //         name: obj.id + ". " + obj.first_name + " " + obj.last_name,
-        //         value: {
-        //             id: obj.id,
-        //             first_name: obj.first_name,
-        //             last_name: obj.last_name,
-        //             role_id: obj.role_id,
-        //             manager_id: obj.manager_id
-        //         }
-        //     }
-        //     return newObj;
-        // })
+        const employeeArr = empArr(res);
 
         inquirer.prompt([
             {
                 name: "employee",
                 type: "list", 
                 message: "Which employee would you like to update?",
-                choices: empArr
+                choices: employeeArr
             },
             {
                 name: "update",
@@ -456,18 +400,21 @@ const updateEmp = () => {
                             console.log("Employee Name Successfully Updated!")
                             allEmployees();
                     })
+                }).catch((error) => {
+                    console.log(error.message);
+                    res.json({ error: error.message });
                 })
             }
             if (answer.update === "Role") {
                 connection.query(`SELECT * FROM role`, (err, res) => {
                     if (err) throw err;
-                    roleArr(res);
+                    const rolesArr = roleArr(res);
 
                     inquirer.prompt({
                         name: "newRole",
                         type: "list",
                         message: "Choose a new role",
-                        choices: roleArr
+                        choices: rolesArr
                     }).then(answer2 => {
                         connection.query(`
                     UPDATE employee SET role_id=?
@@ -477,6 +424,9 @@ const updateEmp = () => {
                             // console.log(res)
                                 allEmployees();
                         })
+                    }).catch((error) => {
+                        console.log(error.message);
+                        res.json({ error: error.message });
                     })
                 })
                 
@@ -488,34 +438,26 @@ const updateEmp = () => {
                 JOIN employee m
                 ON e.manager_id = m.id;`, (err, res) => {
                     
-                        if (err) throw err;
-                        managerArr(res);
-                    // const managerArr = res.map(obj => {
-                    //     let newObj = {
-                    //         name: obj.id + ". " + obj.first_name + " " + obj.last_name,
-                    //         value: {
-                    //             id: obj.id,
-                    //             first_name: obj.first_name,
-                    //             last_name: obj.last_name
-                    //         }
-                    //     }
-                    //     return newObj;
-                    // });
+                if (err) throw err;
+                const managersArr = managerArr(res);
 
-                    inquirer.prompt({
-                        name: "newManager",
-                        type: "list",
-                        message: "Choose a new manager",
-                        choices: managerArr
-                    }).then(answer2 => {
-                        connection.query(`
-                    UPDATE employee SET manager_id=?
-                    WHERE id=?
-                    `, [answer2.newManager.id, empId], (err, res) => {
-                            if (err) throw err;
-                            // console.log(res)
-                                allEmployees();
-                        })
+            inquirer.prompt({
+                name: "newManager",
+                type: "list",
+                message: "Choose a new manager",
+                choices: managersArr
+            }).then(answer2 => {
+                connection.query(`
+                UPDATE employee SET manager_id=?
+                WHERE id=?
+                `, [answer2.newManager.id, empId], (err, res) => {
+                if (err) throw err;
+                // console.log(res)
+                allEmployees();
+                })
+                }).catch((error) => {
+                    console.log(error.message);
+                    res.json({ error: error.message });
                     })
                 })
             }
@@ -546,7 +488,7 @@ const addRole = () => {
     SELECT * FROM department
     `, (err, res) => {
         if (err) throw err;
-            depArr(res);
+            const departmentArr = depArr(res);
             inquirer.prompt([
                 {
                     name: "newRole",
@@ -562,9 +504,10 @@ const addRole = () => {
                     name: "newDept",
                     type: "list",
                     message: "What department does this role belong in?",
-                    choices: depArr
+                    choices: departmentArr
                 }
             ]).then(answer => {
+
                 const newRole = {
                     title: answer.newRole,
                     salary: answer.newSal,
@@ -578,6 +521,9 @@ const addRole = () => {
                         // console.log(res)
                         allEmployees();
                 })
+            }).catch((error) => {
+                console.log(error.message);
+                res.json({ error: error.message });
             })
     })
 }
@@ -590,12 +536,12 @@ const deleteRole = () => {
     SELECT * FROM role;
     `, (err, res) => {
             if (err) throw err;
-            roleArr(res);
+            const rolesArr = roleArr(res);
             inquirer.prompt({
                 name: "deleteRole",
                 type: "list",
                 message: "Delete which role?",
-                choices: roleArr
+                choices: rolesArr
             }).then(answer => {
                 // console.log(answer.deleteRole.id);
                 connection.query(`
@@ -605,7 +551,10 @@ const deleteRole = () => {
                         console.log(res);
                         allEmployees();
                 })
-        })            
+            }).catch((error) => {
+                console.log(error.message);
+                res.json({ error: error.message });
+            })            
     })
 }
 
@@ -620,6 +569,9 @@ const addDep = () => {
             // console.log(res)
             allEmployees();
         })
+    }).catch((error) => {
+        console.log(error.message);
+        res.json({ error: error.message });
     })
     
 }
@@ -629,17 +581,20 @@ const deleteDep = () => {
     SELECT * FROM department;
     `, (err, res) => {
             if (err) throw err;
-            depArr(res);
+            const departmentArr = depArr(res);
             inquirer.prompt({
                 name: "delDep",
                 type: "list",
                 message: "Which department would you like to delete?",
-                choices: depArr
+                choices: departmentArr
             }).then(answer => {
                 connection.query(`DELETE FROM department WHERE id=?`, [answer.delDep.id], (err, res) => {
                     if (err) throw err;
                     allEmployees();
                 })
+            }).catch((error) => {
+                console.log(error.message);
+                res.json({ error: error.message });
             })
             
     })
@@ -653,8 +608,8 @@ const usedBudget = () => {
     JOIN employee e
     ON e.role_id=r.id;
     `, (err, res) => {
-            consoleResult(err, res);
-            // console.log
+        consoleResult(err, res);
+        // console.log
     })
 }
 
@@ -667,10 +622,10 @@ const consoleResult = (err, res) => {
 const validator = function (input) {
     const letters = /^[A-Za-z]+$/;
     if (input.match(letters)) {
-        console.log(`  SUCCESS  !!!  Added new name: ${input}`)
+        // console.log(`SUCCESS  !!!  Added new name: ${input}`)
         return true;
     } else {
-        console.log("  ERROR  !!!  Your input can only contain upper and lower case letters, please try again")
+        console.log("ERROR  !!!  Your input can only contain upper and lower case letters, please try again")
         return false;
     }
 }
