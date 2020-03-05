@@ -3,7 +3,7 @@
 ### requires inquirer, mysql
 
 ## Demo:
-![Demo Image](https://)
+![Demo Image](https://github.com/cndbrtn/Homework12-Employee-Manager/blob/master/employee-tracker-demo.gif?raw=true)
 
 # Features
 * Allows tracking of all employees by various different types
