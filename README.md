@@ -3,7 +3,7 @@
 ### requires inquirer, mysql
 
 ## Demo:
-[Demo Image]()
+![Demo Image](https://)
 
 # Features
 * Allows tracking of all employees by various different types
